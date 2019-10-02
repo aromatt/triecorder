@@ -82,18 +82,6 @@ class Trie:
     def __repr__(self):
         return self.to_str()
 
-def test_trie():
-    trie = Trie('')
-    trie.add('hi')
-    trie.add('hip')
-    trie.add('help')
-    trie.add('hole')
-    trie.add('hop')
-    trie.add('charlie')
-    trie.add('charmander')
-    trie.add('charmeleon')
-    print(trie)
-
 def main():
     debug = os.environ.get('DEBUG', '').lower() == 'true'
     ratio = int(os.environ.get('RATIO', DEFAULT_RATIO))
