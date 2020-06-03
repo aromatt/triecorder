@@ -3,6 +3,7 @@
 import fileinput
 import sys
 import os
+import argparse
 
 DEFAULT_RATIO = 1000
 DEFAULT_MIN_COUNT = 15
@@ -65,7 +66,8 @@ class Trie:
     def to_str(self, depth=0):
         children_strs = ['  ' * depth + c.to_str(depth + 1)
                          for c in self.children.values()]
-        return F"{self.string} ({self.count}, {len(self.children)})\n" + ''.join(children_strs)
+        return ("%s (%s, %s)\n" % (self.string, self.count, len(self.children))
+                + ''.join(children_strs))
 
     # Nodes with high fan-out, i.e. a low count/children ratio, are truncated.
     def summarize(self, prefix='', ratio=DEFAULT_RATIO, min_count=DEFAULT_MIN_COUNT):
@@ -75,26 +77,38 @@ class Trie:
         if self.count > min_count \
                 and self.string != '' \
                 and float(max(self.count, 1)) / max(len(self.children), 1) < ratio:
-            return prefix + F'... ({self.count})'
+            return prefix + '... (%s)' % self.count
         return '\n'.join(c.summarize(prefix, ratio=ratio, min_count=min_count)
                          for c in self.children.values())
 
     def __repr__(self):
         return self.to_str()
 
-def main():
+def main(args):
+    parser = argparse.ArgumentParser(description="""Summarize lines of input.""")
+    parser.add_argument('-d', '--debug', dest='debug', action='store_true',
+                        help='Print debug output')
     debug = os.environ.get('DEBUG', '').lower() == 'true'
     ratio = int(os.environ.get('RATIO', DEFAULT_RATIO))
-    min_count = int(os.environ.get('MIN_COUNT', DEFAULT_MIN_COUNT))
+    parser.add_argument('-r', '--ratio', dest='ratio', type=int,
+                        default=DEFAULT_RATIO,
+                        help='Determines threshold of fan-out at which to summarize. ' +
+                             'Default: %s' % DEFAULT_RATIO)
+    parser.add_argument('-m', '--min-count', dest='min_count', type=int,
+                        default=DEFAULT_MIN_COUNT,
+                        help='Minimum child nodes to qualify a node for summarization. ' +
+                             'Default: %s' % DEFAULT_MIN_COUNT)
+
+    opts = parser.parse_args(args)
 
     trie = Trie('')
-    for line in fileinput.input():
+    for line in sys.stdin.readlines():
         trie.add(line.strip())
 
-    if debug:
+    if opts.debug:
         print(trie)
 
-    print(trie.summarize(ratio=ratio, min_count=min_count))
+    print(trie.summarize(ratio=opts.ratio, min_count=opts.min_count))
 
 if __name__ ==  '__main__':
-    main()
+    main(sys.argv[1:])

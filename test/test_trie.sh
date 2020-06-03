@@ -4,8 +4,8 @@ root=$(cd $(dirname $0)/.. && pwd)
 
 echo
 echo '==='
-cat $root/data/000.txt | DEBUG=true python3 $root/triecorder.py
+cat $root/data/000.txt | $root/triecorder.py -d
 
 echo
 echo '==='
-cat $root/data/000.txt | MIN_COUNT=3 RATIO=2 python3 $root/triecorder.py
+cat $root/data/000.txt | $root/triecorder.py -m 3 -r 2
