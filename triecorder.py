@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
-import fileinput
 import sys
 import os
 import argparse
 
-DEFAULT_RATIO = 1000
-DEFAULT_MIN_COUNT = 15
+DEFAULT_FANOUT_THRESHOLD = 0.5
+DEFAULT_MIN_COUNT = 3
 
 class Trie:
     def __init__(self, string):
@@ -63,22 +62,25 @@ class Trie:
                 break
         return num_added
 
+    @property
+    def fanout(self):
+        return float(max(len(self.children), 1)) / max(self.count, 1)
+
     def to_str(self, depth=0):
         children_strs = ['  ' * depth + c.to_str(depth + 1)
                          for c in self.children.values()]
-        return ("%s (%s, %s)\n" % (self.string, self.count, len(self.children))
+        return ("%s (%s, %s, %s)\n" % (self.string, len(self.children),
+                                       self.count, round(self.fanout, 3))
                 + ''.join(children_strs))
 
-    # Nodes with high fan-out, i.e. a low count/children ratio, are truncated.
-    def summarize(self, prefix='', ratio=DEFAULT_RATIO, min_count=DEFAULT_MIN_COUNT):
+    def summarize(self, fanout_threshold, min_count, prefix=''):
+        """Nodes with high fanout are truncated."""
         prefix = prefix + self.string
         if len(self.children) == 0:
             return prefix
-        if self.count > min_count \
-                and self.string != '' \
-                and float(max(self.count, 1)) / max(len(self.children), 1) < ratio:
+        if self.count > min_count and self.string != '' and self.fanout > fanout_threshold:
             return prefix + '... (%s)' % self.count
-        return '\n'.join(c.summarize(prefix, ratio=ratio, min_count=min_count)
+        return '\n'.join(c.summarize(fanout_threshold, min_count, prefix)
                          for c in self.children.values())
 
     def __repr__(self):
@@ -89,16 +91,17 @@ def main(args):
     parser.add_argument('-d', '--debug', dest='debug', action='store_true',
                         help='Print debug output')
     debug = os.environ.get('DEBUG', '').lower() == 'true'
-    ratio = int(os.environ.get('RATIO', DEFAULT_RATIO))
-    parser.add_argument('-r', '--ratio', dest='ratio', type=int,
-                        default=DEFAULT_RATIO,
-                        help='Determines threshold of fan-out at which to summarize. ' +
-                             'Default: %s' % DEFAULT_RATIO)
-    parser.add_argument('-m', '--min-count', dest='min_count', type=int,
-                        default=DEFAULT_MIN_COUNT,
-                        help='Minimum child nodes to qualify a node for summarization. ' +
-                             'Default: %s' % DEFAULT_MIN_COUNT)
-
+    parser.add_argument('-m',
+        dest='min_count', type=int,
+        default=DEFAULT_MIN_COUNT,
+        help='Minimum total child node count to qualify a node for summarization. ' +
+             'Default: %s' % DEFAULT_MIN_COUNT)
+    parser.add_argument('-t',
+        dest='fanout_threshold', type=float,
+        default=DEFAULT_FANOUT_THRESHOLD,
+        help='Minimum fanout at which to summarize. ' +
+             'Fanout is defined as immediate_children / total_children. ' +
+             'Default: %s' % DEFAULT_FANOUT_THRESHOLD)
     opts = parser.parse_args(args)
 
     trie = Trie('')
@@ -108,7 +111,7 @@ def main(args):
     if opts.debug:
         print(trie)
 
-    print(trie.summarize(ratio=opts.ratio, min_count=opts.min_count))
+    print(trie.summarize(opts.fanout_threshold, opts.min_count))
 
 if __name__ ==  '__main__':
     main(sys.argv[1:])
