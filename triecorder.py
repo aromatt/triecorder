@@ -117,12 +117,13 @@ def main(args):
                                         if c.fanout < 1]) * opts.multiplier
 
     if opts.min_count is None:
-        opts.min_count = median([c.count for c in trie.children.values()]) * opts.multiplier
+        opts.min_count = int(median([c.count for c in trie.children.values()]) * opts.multiplier)
 
     print(trie.summarize(opts.fanout_threshold, opts.min_count))
 
     if opts.debug:
-        print('\n(fanout_threshold: %s, min_count: %s' %(fanout_treshold, min_count))
+        print('\n(fanout_threshold: %s, min_count: %s)' %
+                (opts.fanout_threshold, opts.min_count))
 
 if __name__ ==  '__main__':
     main(sys.argv[1:])
