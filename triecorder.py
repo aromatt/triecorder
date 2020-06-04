@@ -6,6 +6,7 @@ import argparse
 
 DEFAULT_FANOUT_THRESHOLD = 0.5
 DEFAULT_MIN_COUNT = 3
+DEFAULT_MULTIPLIER = 0.33
 
 class Trie:
     def __init__(self, string):
@@ -78,7 +79,7 @@ class Trie:
         prefix = prefix + self.string
         if len(self.children) == 0:
             return prefix
-        if self.count > min_count and self.string != '' and self.fanout > fanout_threshold:
+        if self.count > min_count and self.string != '' and self.fanout >= fanout_threshold:
             return prefix + '... (%s)' % self.count
         return '\n'.join(c.summarize(fanout_threshold, min_count, prefix)
                          for c in self.children.values())
@@ -86,22 +87,22 @@ class Trie:
     def __repr__(self):
         return self.to_str()
 
+def median(items):
+    return sorted(items)[int(len(items) / 2)]
+
 def main(args):
     parser = argparse.ArgumentParser(description="""Summarize lines of input.""")
     parser.add_argument('-d', '--debug', dest='debug', action='store_true',
                         help='Print debug output')
     debug = os.environ.get('DEBUG', '').lower() == 'true'
-    parser.add_argument('-m',
-        dest='min_count', type=int,
-        default=DEFAULT_MIN_COUNT,
-        help='Minimum total child node count to qualify a node for summarization. ' +
-             'Default: %s' % DEFAULT_MIN_COUNT)
-    parser.add_argument('-t',
-        dest='fanout_threshold', type=float,
-        default=DEFAULT_FANOUT_THRESHOLD,
+    parser.add_argument('-m', dest='min_count', type=int, default=None,
+        help='Minimum total child node count to qualify a node for summarization. ')
+    parser.add_argument('-t', dest='fanout_threshold', type=float, default=None,
         help='Minimum fanout at which to summarize. ' +
-             'Fanout is defined as immediate_children / total_children. ' +
-             'Default: %s' % DEFAULT_FANOUT_THRESHOLD)
+             'Fanout is defined as immediate_children / total_children. ')
+    parser.add_argument('-M', dest='multiplier', type=float, default=DEFAULT_MULTIPLIER,
+        help='Multiplier used to automatically determine summarization parameters. ' +
+             'Increase to show more values. Default: %s' % DEFAULT_MULTIPLIER)
     opts = parser.parse_args(args)
 
     trie = Trie('')
@@ -111,7 +112,17 @@ def main(args):
     if opts.debug:
         print(trie)
 
+    if opts.fanout_threshold is None:
+        opts.fanout_threshold = median([c.fanout for c in trie.children.values()
+                                        if c.fanout < 1]) * opts.multiplier
+
+    if opts.min_count is None:
+        opts.min_count = median([c.count for c in trie.children.values()]) * opts.multiplier
+
     print(trie.summarize(opts.fanout_threshold, opts.min_count))
+
+    if opts.debug:
+        print('\n(fanout_threshold: %s, min_count: %s' %(fanout_treshold, min_count))
 
 if __name__ ==  '__main__':
     main(sys.argv[1:])
