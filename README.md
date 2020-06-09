@@ -1,17 +1,18 @@
 # triecorder
 
-## Usage
+[![Build Status](https://travis-ci.com/aromatt/triecorder.svg)](https://travis-ci.com/aromatt/triecorder.svg)
 
+## Usage
 ```
 $ ./triecorder.py -h
-usage: triecorder.py [-h] [-d] [-m MIN_COUNT] [-t FANOUT_THRESHOLD]
-                     [-M MULTIPLIER]
+usage: triecorder.py [-h] [-v] [-m MIN_COUNT] [-t FANOUT_THRESHOLD]
+                     [-M MULTIPLIER] [-d DELIMITER]
 
 Summarize lines of input.
 
 optional arguments:
   -h, --help           show this help message and exit
-  -d, --debug          Print debug output
+  -v, --verbose        Print trie structure and stats
   -m MIN_COUNT         Minimum total child node count to qualify a node for
                        summarization.
   -t FANOUT_THRESHOLD  Minimum fanout at which to summarize. Fanout is defined
@@ -19,6 +20,8 @@ optional arguments:
   -M MULTIPLIER        Multiplier used to automatically determine
                        summarization parameters. Increase to show more values.
                        Default: 0.33
+  -d DELIMITER         Delimiter. Default is None (nodes can split from any
+                       letter).
 ```
 
 ## Examples:
