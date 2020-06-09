@@ -16,11 +16,13 @@ if [[ $# -gt 0 ]] && [[ $1 == '-b' ]]; then
 else
   write_bl=''
 fi
+
 if [[ $# -eq 0 ]]; then
-  files=$(find $regress_dir -type f | grep -vE 'baseline$')
+  files=$regress_dir
 else
-  files=$(find $@ -type f | grep -vE 'baseline$')
+  files=$@
 fi
+files=$(find $files -type f -executable)
 
 exit_code=0
 

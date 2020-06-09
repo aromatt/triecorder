@@ -29,7 +29,7 @@ optional arguments:
 ## Examples:
 
 ```
-$ cat data/000.txt
+$ cat test/data/000.txt
 charles
 charmander
 charmeleon
@@ -38,12 +38,12 @@ hello
 hippo
 
 # Summarize with default automatic tuning
-$ cat data/000.txt | ./triecorder.py
+$ cat test/data/000.txt | ./triecorder.py
 h ... (2)
 char ... (5)
 
 # Show more (summarize less)
-$ cat data/000.txt | ./triecorder.py -M 0.5
+$ cat test/data/000.txt | ./triecorder.py -M 0.5
 hippo
 hello
 char ... (5)
