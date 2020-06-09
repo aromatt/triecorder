@@ -6,7 +6,8 @@
 #
 #  -b: rewrite baselines
 
-TEST=1
+export TEST=1
+export PYTHONHASHSEED=1
 
 regress_dir="$(realpath $(dirname $0))/test"
 
