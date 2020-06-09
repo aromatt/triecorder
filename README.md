@@ -1,5 +1,7 @@
 # triecorder
 
+Summarize lines of text.
+
 [![Build Status](https://travis-ci.com/aromatt/triecorder.svg)](https://travis-ci.com/aromatt/triecorder.svg)
 
 ## Usage
