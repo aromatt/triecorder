@@ -112,10 +112,9 @@ class Trie:
 
     def summarize(self, fanout_threshold, min_count, prefix=''):
         """Nodes with high fanout are truncated."""
-        delimiter = ''
+        prefix = prefix + str(self.string)
         if isinstance(self.string, SuperString) and len(self.children) > 0:
-            delimiter = self.string.delimiter
-        prefix = prefix + str(self.string) + delimiter
+            prefix += self.string.delimiter
         if len(self.children) == 0:
             return prefix
         if self.count > min_count and self.string != '' and self.fanout >= fanout_threshold:
