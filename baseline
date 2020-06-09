@@ -1,5 +1,4 @@
 #! /bin/bash
-set -euo pipefail
 
 # USAGE:
 #
@@ -18,9 +17,9 @@ else
   write_bl=''
 fi
 if [[ $# -eq 0 ]]; then
-  files=$(find $regress_dir -type f | grep -vE '.baseline$')
+  files=$(find $regress_dir -type f | grep -vE 'baseline$')
 else
-  files=$(find $@ | grep -vE '.baseline$')
+  files=$(find $@ -type f | grep -vE 'baseline$')
 fi
 
 exit_code=0
