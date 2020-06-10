@@ -154,10 +154,17 @@ def main(args):
 
     if opts.fanout_threshold is None:
         fanouts = [c.fanout for c in trie.children.values() if c.fanout < 1]
-        opts.fanout_threshold = median(fanouts) * opts.multiplier
+        if len(fanouts) > 0:
+            opts.fanout_threshold = median(fanouts) * opts.multiplier
+        else:
+            opts.fanout_treshold = DEFAULT_FANOUT_THRESHOLD
 
     if opts.min_count is None:
-        opts.min_count = int(median([c.count for c in trie.children.values()]) * opts.multiplier)
+        counts = [c.count for c in trie.children.values()]
+        if len(counts) > 0:
+            opts.min_count = int(median(counts) * opts.multiplier)
+        else:
+            opts.min_count = DEFAULT_MIN_COUNT
 
     print(trie.summarize(opts.fanout_threshold, opts.min_count))
 
