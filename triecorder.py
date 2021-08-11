@@ -33,6 +33,9 @@ class SuperString:
     def __eq__(self, other):
         return hash(self) == hash(other)
 
+    def __lt__(self, other):
+        return self.parts < other.parts
+
     @classmethod
     def from_string(cls, string, delimiter):
         return SuperString(string.split(delimiter), delimiter)
@@ -109,7 +112,7 @@ class Trie:
                                        self.count, round(self.fanout, 3))
                 + ''.join(children_strs))
 
-    def summarize(self, fanout_threshold, min_count, prefix=''):
+    def summarize(self, fanout_threshold, min_count, prefix='', sort=False):
         """Nodes with high fanout are truncated."""
         prefix = prefix + str(self.string)
         if isinstance(self.string, SuperString) and len(self.children) > 0:
@@ -118,11 +121,17 @@ class Trie:
             return prefix
         if self.count > min_count and self.string != '' and self.fanout >= fanout_threshold:
             return prefix + ' ... (%s)' % self.count
-        return '\n'.join(c.summarize(fanout_threshold, min_count, prefix)
-                         for c in self.children.values())
+        child_values = self.children.values()
+        if sort:
+            child_values = sorted(child_values)
+        return '\n'.join(c.summarize(fanout_threshold, min_count, prefix, sort)
+                         for c in child_values)
 
     def __repr__(self):
         return self.to_str()
+
+    def __lt__(self, other):
+        return self.string < other.string
 
 def median(items):
     return sorted(items)[int(len(items) / 2)]
@@ -130,23 +139,30 @@ def median(items):
 def main(args):
     parser = argparse.ArgumentParser(description="""Summarize lines of input.""")
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
-                        help='Print trie structure and stats')
+            help='Print trie structure and stats')
     parser.add_argument('-m', dest='min_count', type=int, default=None,
-        help='Minimum total child node count to qualify a node for summarization. ')
-    parser.add_argument('-t', dest='fanout_threshold', type=float, default=None,
-        help='Minimum fanout at which to summarize. ' +
-             'Fanout is defined as immediate_children / total_children. ')
-    parser.add_argument('-M', dest='multiplier', type=float, default=DEFAULT_MULTIPLIER,
-        help='Multiplier used to automatically determine summarization parameters. ' +
-             'Increase to show more values. Default: %s' % DEFAULT_MULTIPLIER)
-    parser.add_argument('-d', dest='delimiter', type=str,
-        help='Delimiter. Default is None (nodes can split from any letter).')
+            help='Minimum total child node count to qualify a node for summarization. ')
+    parser.add_argument('-t', '--fanout-threshold', dest='fanout_threshold',
+            type=float, default=None,
+            help='Minimum fanout at which to summarize. ' +
+                 'Fanout is defined as immediate_children / total_children. ')
+    parser.add_argument('-M', '--multiplier', dest='multiplier',
+            type=float, default=DEFAULT_MULTIPLIER,
+            help='Multiplier used to automatically determine summarization parameters. ' +
+                 'Increase to show more values. Default: %s' % DEFAULT_MULTIPLIER)
+    parser.add_argument('-d', '--delimiter', dest='delimiter', type=str,
+            help='Delimiter. Default is None (nodes can split from any letter).')
+    parser.add_argument('-s', '--sort', dest='sort', action='store_true',
+            help='Sort sibling nodes by their values.')
     opts = parser.parse_args(args)
 
     trie = Trie()
     for line in sys.stdin.readlines():
-        s = SuperString.from_string(line.strip(), opts.delimiter) if opts.delimiter else line.strip()
-        trie.add(s)
+        if opts.delimiter:
+            string = SuperString.from_string(line.strip(), opts.delimiter)
+        else:
+            string = line.strip()
+        trie.add(string)
 
     if opts.verbose:
         print(trie)
@@ -165,7 +181,7 @@ def main(args):
         else:
             opts.min_count = DEFAULT_MIN_COUNT
 
-    print(trie.summarize(opts.fanout_threshold, opts.min_count))
+    print(trie.summarize(opts.fanout_threshold, opts.min_count, sort=opts.sort))
 
     if opts.verbose:
         print('\n(fanout_threshold: %s, min_count: %s)' %
