@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 
-import sys
-import os
 import argparse
+import sys
 
 DEFAULT_FANOUT_THRESHOLD = 0.5
 DEFAULT_MIN_COUNT = 3
 DEFAULT_MULTIPLIER = 0.33
 
 class SuperString:
-    def __init__(self, parts=[], delimiter=''):
-        self.parts = parts
+    def __init__(self, parts=None, delimiter=''):
+        self.parts = parts if parts is not None else []
         self.delimiter = delimiter
 
     def startswith(self, other):
@@ -35,7 +34,7 @@ class SuperString:
         return hash(self) == hash(other)
 
     @classmethod
-    def from_string(self, string, delimiter):
+    def from_string(cls, string, delimiter):
         return SuperString(string.split(delimiter), delimiter)
 
     def __repr__(self):
@@ -157,7 +156,7 @@ def main(args):
         if len(fanouts) > 0:
             opts.fanout_threshold = median(fanouts) * opts.multiplier
         else:
-            opts.fanout_treshold = DEFAULT_FANOUT_THRESHOLD
+            opts.fanout_threshold = DEFAULT_FANOUT_THRESHOLD
 
     if opts.min_count is None:
         counts = [c.count for c in trie.children.values()]
